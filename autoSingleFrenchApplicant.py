@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 
 from selenium import webdriver
-from selenium.common import NoSuchElementException, TimeoutException, ElementClickInterceptedException
+from selenium.common import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
@@ -15,8 +15,8 @@ WAIT_TIMEOUT = 10
 API_KEY = 'a8c29c48cfc7bd56a2519f4584961fa1'
 sitekey = '6LfDUY8bAAAAAPU5MWGT_w0x5M-8RdzC29SClOfI'
 
-option = webdriver.ChromeOptions()
-option.add_experimental_option('detach', True)
+# option = webdriver.Firefox()
+# option.add_experimental_option('detach', True)
 
 centres = {
     'Irkutsk': ' France Visa Application Centre-Irkutsk ',
@@ -176,31 +176,28 @@ def click_on_the_button_by_class_name(driver: webdriver, class_name: str):
 
 
 def fill_centre_category_subcategory(driver: webdriver, centre_name: str, booking_category: str, subcategory: str):
-    target_select_centre_id = 'mat-select-value-1'
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    target_select_centre_id = 'mat-select-value-1'
     waitByMethods.wait_clickable_by_id(driver, target_select_centre_id)
     driver.find_element(By.ID, target_select_centre_id).click()
-
     target_centre = f"//span[text() = '{centres[centre_name]}']"
     waitByMethods.wait_clickable_by_xpath(driver, target_centre)
-    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
     driver.find_element(By.XPATH, target_centre).click()
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
 
     target_select_category_id = 'mat-select-value-3'
-    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
     driver.find_element(By.ID, target_select_category_id).click()
-
     target_category = f"//span[text() = '{categories[booking_category]}']"
     waitByMethods.wait_clickable_by_xpath(driver, target_category)
     driver.find_element(By.XPATH, target_category).click()
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
 
     target_select_subcategory_id = 'mat-select-value-5'
-    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
     driver.find_element(By.ID, target_select_subcategory_id).click()
-
     target_subcategory = f"//span[text() = '{subcategories[subcategory]}']"
     waitByMethods.wait_clickable_by_xpath(driver, target_subcategory)
     driver.find_element(By.XPATH, target_subcategory).click()
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
 
 
 def fill_subcategory(driver: webdriver, subcategory: str):
@@ -210,7 +207,10 @@ def fill_subcategory(driver: webdriver, subcategory: str):
 
     target_subcategory = f"//span[text() = '{subcategories[subcategory]}']"
     waitByMethods.wait_clickable_by_xpath(driver, target_subcategory)
-    driver.find_element(By.XPATH, target_subcategory).click()
+    element = driver.find_element(By.XPATH, target_subcategory)
+    driver.execute_script("arguments[0].click();", element)
+
+    # driver.find_element(By.XPATH, target_subcategory).click()
 
 
 def find_available_slots(driver: webdriver):
@@ -328,7 +328,9 @@ def fill_about_me_info(driver: webdriver, applicant: frenchApplicants.Applicant)
 
     driver.find_element(By.ID, citizen_id).click()
     waitByMethods.wait_clickable_by_xpath(driver, target_citizen_xpath)
-    driver.find_element(By.XPATH, target_citizen_xpath).click()
+    # driver.find_element(By.XPATH, target_citizen_xpath).click()
+    element = driver.find_element(By.XPATH, target_citizen_xpath)
+    driver.execute_script("arguments[0].click();", element)
 
     driver.find_element(By.ID, passport_no_id).send_keys(applicant.passport_no)
 
@@ -397,13 +399,15 @@ def info_about_me_confirm(driver: webdriver):
 #     driver.find_element(By.XPATH, target_payment_online_xpath)
 
 
-def booking(applicant: frenchApplicants.Applicant, city: str, is_prime: bool):
+def booking(applicant: frenchApplicants.Applicant, city: str, is_prime_exist: bool):
     current_time = datetime.now()
     print(f"[INFO] {current_time} ---> Processing applicant: {applicant.email}")
 
-    driver_vfs = webdriver.Chrome(options=option)
+    # driver_vfs = webdriver.Chrome(options=option)
+    driver_vfs = webdriver.Firefox()
     driver_vfs.get(VFS_GLOBAL_FRA_URL)
     driver_vfs.maximize_window()
+    time.sleep(10)
 
     login(driver_vfs, applicant)
 
@@ -411,7 +415,7 @@ def booking(applicant: frenchApplicants.Applicant, city: str, is_prime: bool):
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
 
     click_on_the_button_by_xapth(driver_vfs, target_create_booking_xpath)
-    refresh_page_until_slot_will_be_available_for_selected_city(driver_vfs, city, is_prime)
+    refresh_page_until_slot_will_be_available_for_selected_city(driver_vfs, city, is_prime_exist)
     click_on_the_button_by_xapth(driver_vfs, target_continue_xpath)
     fill_about_me_info(driver_vfs, applicant)
     info_about_me_confirm(driver_vfs)
@@ -434,4 +438,4 @@ if __name__ == '__main__':
         booking(frenchApplicants.test_user, yekat, is_prime)
     except NoSuchElementException:
         current_timestamp = datetime.now()
-        print(f"[ERROR] {current_timestamp} No such element exception!")
+        print(f"[ERROR] {current_timestamp} ---> No such element exception!")
