@@ -1,0 +1,437 @@
+import time
+from datetime import datetime
+
+from selenium import webdriver
+from selenium.common import NoSuchElementException, TimeoutException, ElementClickInterceptedException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait
+from twocaptcha import TwoCaptcha
+import waitByMethods
+import frenchApplicants
+
+VFS_GLOBAL_FRA_URL = 'https://visa.vfsglobal.com/rus/ru/fra/login'
+WAIT_TIMEOUT = 10
+API_KEY = 'a8c29c48cfc7bd56a2519f4584961fa1'
+sitekey = '6LfDUY8bAAAAAPU5MWGT_w0x5M-8RdzC29SClOfI'
+
+option = webdriver.ChromeOptions()
+option.add_experimental_option('detach', True)
+
+centres = {
+    'Irkutsk': ' France Visa Application Centre-Irkutsk ',
+    'Kaliningrad': ' France Visa Application Centre-Kaliningrad ',
+    'Kazan': ' France Visa Application Centre-Kazan ',
+    'Khabarovsk': ' France Visa Application Centre-Khabarovsk ',
+    'Krasnodar': ' France Visa Application Centre-Krasnodar ',
+    'Krasnoyarsk': ' France Visa Application Centre-Krasnoyarsk ',
+    'Moscow': ' France Visa Application Centre-Moscow ',
+    'Nizhniy Novgorod': ' France Visa Application Centre-Nizhniy Novgorod ',
+    'Novosibirsk': ' France Visa Application Centre-Novosibirsk ',
+    'Omsk': ' France Visa Application Centre-Omsk ',
+    'Perm': ' France Visa Application Centre-Perm ',
+    'Rostov on Don': ' France Visa Application Centre-Rostov on Don ',
+    'Samara': ' France Visa Application Centre-Samara ',
+    'Saratov': ' France Visa Application Centre-Saratov ',
+    'St Petersburg': ' France Visa Application Centre-St Petersburg ',
+    'Ufa': ' France Visa Application Centre-Ufa ',
+    'Vladivistok': ' France Visa Application Centre-Vladivostok ',
+    'Yekaterinburg': ' France Visa Application Centre-Yekaterinburg '
+}
+
+centres_id = {
+    'Irkutsk': 'mat-option-0',
+    'Kaliningrad': 'mat-option-1',
+    'Kazan': 'mat-option-2',
+    'Khabarovsk': 'mat-option-3',
+    'Krasnodar': 'mat-option-4',
+    'Krasnoyarsk': 'mat-option-5',
+    'Moscow': 'mat-option-6',
+    'Nizhniy Novgorod': 'mat-option-7',
+    'Novosibirsk': 'mat-option-8',
+    'Omsk': 'mat-option-9',
+    'Perm': 'mat-option-10',
+    'Rostov on Don': 'mat-option-11',
+    'Samara': 'mat-option-12',
+    'Saratov': 'mat-option-13',
+    'St Petersburg': 'mat-option-14',
+    'Ufa': 'mat-option-15',
+    'Vladivistok': 'mat-option-16',
+    'Yekaterinburg': 'mat-option-17'
+}
+
+categories = {
+    'Long': ' Long Stay ',
+    'Short': ' Short Stay '
+}
+
+categories_id = {
+    'Long': 'mat-option-25',
+    'Short': 'mat-option-26'
+}
+
+subcategories = {
+    'All': ' Short Stay All kind of other short stay visas ',
+    'Spouse': ' Short Stay children of spouse of French/EU/EEA/CH/UK ',
+    'Prime': ' PRIME TIME (55 euros ) Short Stay All kind of other short stay visas '
+}
+
+subcategories_id = {
+    'All': 'mat-option-28',
+    'Spouse': 'mat-option-29',
+    'Prime': ' PRIME TIME (55 euros ) Short Stay All kind of other short stay visas '
+}
+
+
+def is_re_captcha(driver):
+    try:
+        driver.find_element(By.CSS_SELECTOR, 'iframe[title="reCAPTCHA"]')
+        return True
+    except NoSuchElementException:
+        return False
+
+
+def do_element_visible(driver: webdriver):
+    script = """
+    var textarea = document.getElementById("g-recaptcha-response");
+    if (textarea) {
+        textarea.style.width = "100%";
+        textarea.style.height = "400px";
+        textarea.style.border = "1px solid rgb(193, 193, 193)";
+        textarea.style.margin = "100px 25px";
+        textarea.style.padding = "0px";
+        textarea.style.resize = "none";
+        textarea.style.removeProperty('display');  // Set display to "block" to make it visible
+    }
+    """
+
+    driver.execute_script(
+        script
+    )
+
+
+def recaptcha_solver(driver: webdriver,
+                     input_sitekey: str,
+                     input_url: str,
+                     applicant: frenchApplicants.Applicant,
+                     prefix_callback_function: str):
+    start_time = datetime.now()
+    solver = TwoCaptcha(API_KEY)
+
+    current_time = datetime.now()
+    print(f'[INFO] {current_time} ---> Solving VFS reCAPTCHA for ---> {applicant.email}')
+    key = solver.recaptcha(sitekey=input_sitekey, url=input_url)['code']
+    end_time = datetime.now()
+    current_time = datetime.now()
+    print(
+        f'[INFO] {current_time} ---> VFS reCAPTCHA was solved by: {end_time - start_time} for ---> {applicant.email}')
+
+    g_recaptcha_response_name = 'g-recaptcha-response'
+
+    do_element_visible(driver)
+
+    g_recaptcha_input_field = driver.find_element(By.NAME, g_recaptcha_response_name)
+    g_recaptcha_input_field.send_keys(key)
+    time.sleep(1)
+
+    driver.execute_script(
+        f"{prefix_callback_function}.callback('{key}')"
+    )
+
+
+def login(driver: webdriver, applicant: frenchApplicants.Applicant):
+    target_email_id = 'mat-input-0'
+    target_password_id = 'mat-input-1'
+    target_booking_xpath = '//button[contains(span, "Войти")]'
+
+    prefix_callback_function = '___grecaptcha_cfg.clients[0].P.P'
+
+    waitByMethods.wait_visibility_by_id(driver, target_email_id)
+    input_email = driver.find_element(By.ID, target_email_id)
+    input_email.send_keys(applicant.email)
+
+    input_password = driver.find_element(By.ID, target_password_id)
+    input_password.send_keys(applicant.password_vfs)
+
+    recaptcha_solver(driver, sitekey, VFS_GLOBAL_FRA_URL, applicant, prefix_callback_function)
+
+    button_booking = driver.find_element(By.XPATH, target_booking_xpath)
+    button_booking.click()
+    current_time = datetime.now()
+    print(f"[INFO] {current_time} ---> Logged in successfully for ---> {applicant.email}")
+
+
+def click_on_the_button_by_xapth(driver: webdriver, xpath: str):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    button = driver.find_element(By.XPATH, xpath)
+    driver.execute_script(
+        "arguments[0].click();", button
+    )
+
+
+def click_on_the_button_by_class_name(driver: webdriver, class_name: str):
+    waitByMethods.wait_vilibility_by_class_name(driver, class_name)
+    button = driver.find_element(By.CLASS_NAME, class_name)
+    button.click()
+
+
+def fill_centre_category_subcategory(driver: webdriver, centre_name: str, booking_category: str, subcategory: str):
+    target_select_centre_id = 'mat-select-value-1'
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    waitByMethods.wait_clickable_by_id(driver, target_select_centre_id)
+    driver.find_element(By.ID, target_select_centre_id).click()
+
+    target_centre = f"//span[text() = '{centres[centre_name]}']"
+    waitByMethods.wait_clickable_by_xpath(driver, target_centre)
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    driver.find_element(By.XPATH, target_centre).click()
+
+    target_select_category_id = 'mat-select-value-3'
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    driver.find_element(By.ID, target_select_category_id).click()
+
+    target_category = f"//span[text() = '{categories[booking_category]}']"
+    waitByMethods.wait_clickable_by_xpath(driver, target_category)
+    driver.find_element(By.XPATH, target_category).click()
+
+    target_select_subcategory_id = 'mat-select-value-5'
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    driver.find_element(By.ID, target_select_subcategory_id).click()
+
+    target_subcategory = f"//span[text() = '{subcategories[subcategory]}']"
+    waitByMethods.wait_clickable_by_xpath(driver, target_subcategory)
+    driver.find_element(By.XPATH, target_subcategory).click()
+
+
+def fill_subcategory(driver: webdriver, subcategory: str):
+    target_select_subcategory_id = 'mat-select-value-5'
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    driver.find_element(By.ID, target_select_subcategory_id).click()
+
+    target_subcategory = f"//span[text() = '{subcategories[subcategory]}']"
+    waitByMethods.wait_clickable_by_xpath(driver, target_subcategory)
+    driver.find_element(By.XPATH, target_subcategory).click()
+
+
+def find_available_slots(driver: webdriver):
+    WebDriverWait(driver, WAIT_TIMEOUT).until(
+        ec.visibility_of_all_elements_located(
+            (By.XPATH, "//div[contains(.,' Самый ранний доступный слот записи')]"))
+    )
+
+
+def refresh_page_until_slot_will_be_available_for_selected_city(driver: webdriver, city: str, is_prime_available: bool):
+    timeout = 60
+    start_time = time.time()
+    selected_short = 'Short'
+    selected_all = 'All'
+    selected_prime = 'Prime'
+    selected_spouse = 'Spouse'
+
+    waitByMethods.wait_visibility_by_id(driver, 'mat-select-0')
+    while time.time() - start_time < timeout:
+        if is_prime_available:
+            try:
+                current_time = datetime.now()
+                print(
+                    f"[INFO] {current_time} ---> Selected city: {city} --> Subcategory: {subcategories[selected_all]}")
+                fill_centre_category_subcategory(driver, city, selected_short, selected_all)
+                waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+                find_available_slots(driver)
+                current_time = datetime.now()
+                print(f"[INFO] {current_time} ---> Available slots founded in {city} for {subcategories[selected_all]}")
+                break
+            except (TimeoutException, NoSuchElementException):
+                current_time = datetime.now()
+                print(f"[INFO] {current_time} ---> No available slots in {city} for {subcategories[selected_all]}")
+                print(
+                    f"[INFO] {current_time} ---> Selected city: {city} --> Subcategory: {subcategories[selected_prime]}")
+                try:
+                    fill_subcategory(driver, selected_prime)
+                    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+                    find_available_slots(driver)
+                    current_time = datetime.now()
+                    print(
+                        f"[INFO] {current_time} ---> Available slots founded in {city} for {subcategories[selected_prime]}")
+                    break
+                except TimeoutException:
+                    current_time = datetime.now()
+                    print(
+                        f"[INFO] {current_time} ---> No available slots in {city} for {subcategories[selected_prime]}")
+                    print(
+                        f"[INFO] {current_time} ---> Selected city: {city} --> Subcategory: {subcategories[selected_spouse]}")
+                    try:
+                        fill_subcategory(driver, selected_spouse)
+                        waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+                        find_available_slots(driver)
+                        current_time = datetime.now()
+                        print(
+                            f"[INFO] {current_time} ---> Available slots founded in {city} for {subcategories[selected_spouse]}")
+                        break
+                    except TimeoutException:
+                        print(
+                            f"[INFO] {current_time} No available slots in {city} for {subcategories[selected_spouse]}")
+                        continue
+        else:
+            try:
+                current_time = datetime.now()
+                print(
+                    f"[INFO] {current_time} ---> Selected city: {city} --> Subcategory: {subcategories[selected_all]}")
+                fill_centre_category_subcategory(driver, city, selected_short, selected_all)
+                waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+                find_available_slots(driver)
+                current_time = datetime.now()
+                print(f"[INFO] {current_time} ---> Available slots founded in {city} for {subcategories[selected_all]}")
+                break
+            except TimeoutException:
+                current_time = datetime.now()
+                print(f"[INFO] {current_time} ---> No available slots in {city} for {subcategories[selected_all]}")
+                print(
+                    f"[INFO] {current_time} ---> Selected city: {city} --> Subcategory: {subcategories[selected_spouse]}")
+                try:
+                    fill_subcategory(driver, selected_spouse)
+                    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+                    find_available_slots(driver)
+                    current_time = datetime.now()
+                    print(
+                        f"[INFO] {current_time} ---> Available slots founded in {city} for {subcategories[selected_spouse]}")
+                    break
+                except TimeoutException:
+                    print(f"[INFO] {current_time} No available slots in {city} for {subcategories[selected_spouse]}")
+                    continue
+
+
+def fill_about_me_info(driver: webdriver, applicant: frenchApplicants.Applicant):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    name_id = 'mat-input-2'
+    surname_id = 'mat-input-3'
+    gender_id = 'mat-select-value-7'
+    target_gender_xpath = f"//span[contains(.,'{applicant.gender}')]"
+    date_of_birth_id = 'dateOfBirth'
+    citizen_id = 'mat-select-value-9'
+    target_citizen_xpath = f"//span[text() = ' RUSSIAN FEDERATION ']"
+    passport_no_id = 'mat-input-4'
+    passport_expiration_date = 'passportExpirtyDate'
+    code_id = 'mat-input-5'
+    phone_no = 'mat-input-6'
+    email_id = 'mat-input-7'
+
+    waitByMethods.wait_clickable_by_id(driver, name_id)
+    driver.find_element(By.ID, name_id).send_keys(applicant.first_name)
+    driver.find_element(By.ID, surname_id).send_keys(applicant.last_name)
+
+    driver.find_element(By.ID, gender_id).click()
+    waitByMethods.wait_clickable_by_xpath(driver, target_gender_xpath)
+    driver.find_element(By.XPATH, target_gender_xpath).click()
+
+    driver.find_element(By.ID, date_of_birth_id).send_keys(applicant.birth_date)
+
+    driver.find_element(By.ID, citizen_id).click()
+    waitByMethods.wait_clickable_by_xpath(driver, target_citizen_xpath)
+    driver.find_element(By.XPATH, target_citizen_xpath).click()
+
+    driver.find_element(By.ID, passport_no_id).send_keys(applicant.passport_no)
+
+    driver.find_element(By.ID, passport_expiration_date).send_keys(applicant.exp_date)
+
+    driver.find_element(By.ID, code_id).send_keys(applicant.code)
+
+    driver.find_element(By.ID, phone_no).send_keys(applicant.phone)
+
+    driver.find_element(By.ID, email_id).send_keys(applicant.email)
+
+    target_save_xpath = '//button[contains(span, "Сохранить")]'
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+
+    click_on_the_button_by_xapth(driver, target_save_xpath)
+
+
+def info_about_me_confirm(driver: webdriver):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    target_continue_xpath = '//button[contains(span, "Продолжить")]'
+    click_on_the_button_by_xapth(driver, target_continue_xpath)
+
+
+# todo: here I stopped
+# def select_date(driver: webdriver):
+#     WebDriverWait(driver, WAIT_TIMEOUT).until(
+#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
+#     )
+#     # target_continue_xpath = '//button[contains(span, "Продолжить")]'
+#     # click_on_the_button_by_xapth(driver, target_continue_xpath)
+#     target_date_css = 'td.fc-daygrid-day.fc-day.fc-day-thu.fc-day-future.date-availiable'
+#     driver.find_element(By.CSS_SELECTOR, target_date_css).click()
+#     target_xpath_select_time = '//button[contains(span, "Все")]'
+#     wait_by_xpath(driver, target_xpath_select_time)
+#     wait_clickable_by_id(driver, 'STRadio1')
+#     driver.find_element(By.ID, 'STRadio1').click()
+#     target_continue_xpath = '//button[contains(span, "Продолжить")]'
+#     click_on_the_button_by_xapth(driver, target_continue_xpath)
+
+#
+# def select_services(driver: webdriver):
+#     WebDriverWait(driver, WAIT_TIMEOUT).until(
+#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
+#     )
+#     target_continue_xpath = '//button[contains(span, "Продолжить")]'
+#     wait_clickable_by_xpath(driver, target_continue_xpath)
+#     click_on_the_button_by_xapth(driver, target_continue_xpath)
+#
+#
+# def skip_insurance_details(driver: webdriver):
+#     WebDriverWait(driver, WAIT_TIMEOUT).until(
+#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
+#     )
+#     target_continue_xpath = '//button[contains(span, "Продолжить")]'
+#     wait_clickable_by_xpath(driver, target_continue_xpath)
+#     target_confirm_xpath = '//button[contains(span, " Подтвердить ")]'
+#     wait_clickable_by_xpath(driver, target_confirm_xpath)
+#
+#
+# def details_and_payment(driver: webdriver):
+#     WebDriverWait(driver, WAIT_TIMEOUT).until(
+#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
+#     )
+#     driver.find_element(By.ID, 'mat-checkbox-7-input').click()
+#     target_payment_online_xpath = '//button[contains(span, " Оплатить онлайн ")]'
+#     driver.find_element(By.XPATH, target_payment_online_xpath)
+
+
+def booking(applicant: frenchApplicants.Applicant, city: str, is_prime: bool):
+    current_time = datetime.now()
+    print(f"[INFO] {current_time} ---> Processing applicant: {applicant.email}")
+
+    driver_vfs = webdriver.Chrome(options=option)
+    driver_vfs.get(VFS_GLOBAL_FRA_URL)
+    driver_vfs.maximize_window()
+
+    login(driver_vfs, applicant)
+
+    target_create_booking_xpath = '//button[contains(span, "Записаться на прием")]'
+    target_continue_xpath = '//button[contains(span, "Продолжить")]'
+
+    click_on_the_button_by_xapth(driver_vfs, target_create_booking_xpath)
+    refresh_page_until_slot_will_be_available_for_selected_city(driver_vfs, city, is_prime)
+    click_on_the_button_by_xapth(driver_vfs, target_continue_xpath)
+    fill_about_me_info(driver_vfs, applicant)
+    info_about_me_confirm(driver_vfs)
+
+    # select_date(driver_vfs)
+    #
+    # select_services(driver_vfs)
+    #
+    # skip_insurance_details(driver_vfs)
+    #
+    # details_and_payment(driver_vfs)
+
+
+if __name__ == '__main__':
+    moscow = 'Moscow'
+    yekat = 'Yekaterinburg'
+    # is_prime = True
+    is_prime = False
+    try:
+        booking(frenchApplicants.test_user, yekat, is_prime)
+    except NoSuchElementException:
+        current_timestamp = datetime.now()
+        print(f"[ERROR] {current_timestamp} No such element exception!")
