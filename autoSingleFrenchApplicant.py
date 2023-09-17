@@ -16,7 +16,8 @@ API_KEY = 'a8c29c48cfc7bd56a2519f4584961fa1'
 sitekey = '6LfDUY8bAAAAAPU5MWGT_w0x5M-8RdzC29SClOfI'
 
 # option = webdriver.Firefox()
-# option.add_experimental_option('detach', True)
+option = webdriver.ChromeOptions()
+option.add_experimental_option('detach', True)
 
 centres = {
     'Irkutsk': ' France Visa Application Centre-Irkutsk ',
@@ -316,36 +317,35 @@ def fill_about_me_info(driver: webdriver, applicant: frenchApplicants.Applicant)
     phone_no = 'mat-input-6'
     email_id = 'mat-input-7'
 
-    waitByMethods.wait_clickable_by_id(driver, name_id)
-    driver.find_element(By.ID, name_id).send_keys(applicant.first_name)
-    driver.find_element(By.ID, surname_id).send_keys(applicant.last_name)
-
+    time.sleep(2)
     driver.find_element(By.ID, gender_id).click()
     waitByMethods.wait_clickable_by_xpath(driver, target_gender_xpath)
     driver.find_element(By.XPATH, target_gender_xpath).click()
 
-    driver.find_element(By.ID, date_of_birth_id).send_keys(applicant.birth_date)
-
+    time.sleep(2)
     driver.find_element(By.ID, citizen_id).click()
     waitByMethods.wait_clickable_by_xpath(driver, target_citizen_xpath)
-    # driver.find_element(By.XPATH, target_citizen_xpath).click()
     element = driver.find_element(By.XPATH, target_citizen_xpath)
     driver.execute_script("arguments[0].click();", element)
 
+    waitByMethods.wait_clickable_by_id(driver, name_id)
+    driver.find_element(By.ID, name_id).send_keys(applicant.first_name)
+    driver.find_element(By.ID, surname_id).send_keys(applicant.last_name)
+    driver.find_element(By.ID, date_of_birth_id).send_keys(applicant.birth_date)
     driver.find_element(By.ID, passport_no_id).send_keys(applicant.passport_no)
-
     driver.find_element(By.ID, passport_expiration_date).send_keys(applicant.exp_date)
-
     driver.find_element(By.ID, code_id).send_keys(applicant.code)
-
     driver.find_element(By.ID, phone_no).send_keys(applicant.phone)
-
     driver.find_element(By.ID, email_id).send_keys(applicant.email)
 
     target_save_xpath = '//button[contains(span, "Сохранить")]'
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
 
+    time.sleep(20)
+
     click_on_the_button_by_xapth(driver, target_save_xpath)
+
+    print("ok")
 
 
 def info_about_me_confirm(driver: webdriver):
@@ -355,56 +355,54 @@ def info_about_me_confirm(driver: webdriver):
 
 
 # todo: here I stopped
-# def select_date(driver: webdriver):
-#     WebDriverWait(driver, WAIT_TIMEOUT).until(
-#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
-#     )
-#     # target_continue_xpath = '//button[contains(span, "Продолжить")]'
-#     # click_on_the_button_by_xapth(driver, target_continue_xpath)
-#     target_date_css = 'td.fc-daygrid-day.fc-day.fc-day-thu.fc-day-future.date-availiable'
-#     driver.find_element(By.CSS_SELECTOR, target_date_css).click()
-#     target_xpath_select_time = '//button[contains(span, "Все")]'
-#     wait_by_xpath(driver, target_xpath_select_time)
-#     wait_clickable_by_id(driver, 'STRadio1')
-#     driver.find_element(By.ID, 'STRadio1').click()
-#     target_continue_xpath = '//button[contains(span, "Продолжить")]'
-#     click_on_the_button_by_xapth(driver, target_continue_xpath)
+def select_date(driver: webdriver):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    # target_continue_xpath = '//button[contains(span, "Продолжить")]'
+    # click_on_the_button_by_xapth(driver, target_continue_xpath)
+    target_date_xpath = '//td[contains(@class, "date-availiable")]'
+    waitByMethods.wait_clickable_by_xpath(driver, target_date_xpath)
+    # driver.find_element(By.XPATH, target_date_xpath).click()
+    element = driver.find_element(By.XPATH, target_date_xpath)
+    driver.execute_script(
+        "arguments[0].click();", element
+    )
+    target_xpath_select_time = '//button[contains(@span, "Все")]'
+    waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time)
+    target_xpath_select_time_slot = '//input[contains(@id, "STRadio")]'
+    waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time_slot)
+    driver.find_element(By.XPATH, target_xpath_select_time_slot).click()
+    target_continue_xpath = '//button[contains(span, "Продолжить")]'
+    click_on_the_button_by_xapth(driver, target_continue_xpath)
 
-#
-# def select_services(driver: webdriver):
-#     WebDriverWait(driver, WAIT_TIMEOUT).until(
-#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
-#     )
-#     target_continue_xpath = '//button[contains(span, "Продолжить")]'
-#     wait_clickable_by_xpath(driver, target_continue_xpath)
-#     click_on_the_button_by_xapth(driver, target_continue_xpath)
-#
-#
-# def skip_insurance_details(driver: webdriver):
-#     WebDriverWait(driver, WAIT_TIMEOUT).until(
-#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
-#     )
-#     target_continue_xpath = '//button[contains(span, "Продолжить")]'
-#     wait_clickable_by_xpath(driver, target_continue_xpath)
-#     target_confirm_xpath = '//button[contains(span, " Подтвердить ")]'
-#     wait_clickable_by_xpath(driver, target_confirm_xpath)
-#
-#
-# def details_and_payment(driver: webdriver):
-#     WebDriverWait(driver, WAIT_TIMEOUT).until(
-#         ec.invisibility_of_element_located((By.CLASS_NAME, 'sk-ball-spin-clockwise'))
-#     )
-#     driver.find_element(By.ID, 'mat-checkbox-7-input').click()
-#     target_payment_online_xpath = '//button[contains(span, " Оплатить онлайн ")]'
-#     driver.find_element(By.XPATH, target_payment_online_xpath)
+
+def select_services(driver: webdriver):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    target_continue_xpath = '//button[contains(span, "Продолжить")]'
+    waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
+    click_on_the_button_by_xapth(driver, target_continue_xpath)
+
+
+def skip_insurance_details(driver: webdriver):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    target_continue_xpath = '//button[contains(span, "Продолжить")]'
+    waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
+    target_confirm_xpath = '//button[contains(span, " Подтвердить ")]'
+    waitByMethods.wait_clickable_by_xpath(driver, target_confirm_xpath)
+
+
+def details_and_payment(driver: webdriver):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    driver.find_element(By.ID, 'mat-checkbox-7-input').click()
+    target_payment_online_xpath = '//button[contains(span, " Оплатить онлайн ")]'
+    driver.find_element(By.XPATH, target_payment_online_xpath)
 
 
 def booking(applicant: frenchApplicants.Applicant, city: str, is_prime_exist: bool):
     current_time = datetime.now()
     print(f"[INFO] {current_time} ---> Processing applicant: {applicant.email}")
 
-    # driver_vfs = webdriver.Chrome(options=option)
-    driver_vfs = webdriver.Firefox()
+    driver_vfs = webdriver.Chrome(options=option)
+    # driver_vfs = webdriver.Firefox()
     driver_vfs.get(VFS_GLOBAL_FRA_URL)
     driver_vfs.maximize_window()
     time.sleep(10)
@@ -420,13 +418,14 @@ def booking(applicant: frenchApplicants.Applicant, city: str, is_prime_exist: bo
     fill_about_me_info(driver_vfs, applicant)
     info_about_me_confirm(driver_vfs)
 
-    # select_date(driver_vfs)
-    #
-    # select_services(driver_vfs)
-    #
-    # skip_insurance_details(driver_vfs)
-    #
-    # details_and_payment(driver_vfs)
+    # todo: тут остановился, ниже не работает ничего
+    select_date(driver_vfs)
+
+    select_services(driver_vfs)
+
+    skip_insurance_details(driver_vfs)
+
+    details_and_payment(driver_vfs)
 
 
 if __name__ == '__main__':

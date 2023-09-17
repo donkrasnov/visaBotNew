@@ -59,6 +59,16 @@ def wait_visibility_by_id(driver: webdriver, target_id: str):
         print(f'[ERROR] {current_timestamp} ---> ID "{target_id}" is not visible!')
 
 
+def wait_invisibility_by_id(driver: webdriver, target_id: str):
+    try:
+        WebDriverWait(driver, WAIT_TIMEOUT).until(
+            ec.invisibility_of_element_located((By.ID, target_id))
+        )
+    except (TimeoutException, NoSuchElementException):
+        current_timestamp = datetime.now()
+        print(f'[ERROR] {current_timestamp} ---> ID "{target_id}" is visible!')
+
+
 def wait_vilibility_by_class_name(driver: webdriver, class_name: str):
     try:
         WebDriverWait(driver, WAIT_TIMEOUT).until(
