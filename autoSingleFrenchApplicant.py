@@ -330,18 +330,24 @@ def fill_about_me_info(driver: webdriver, applicant: frenchApplicants.Applicant)
 
     waitByMethods.wait_clickable_by_id(driver, name_id)
     driver.find_element(By.ID, name_id).send_keys(applicant.first_name)
+ф    time.sleep(2)
     driver.find_element(By.ID, surname_id).send_keys(applicant.last_name)
+    time.sleep(2)
     driver.find_element(By.ID, date_of_birth_id).send_keys(applicant.birth_date)
+    time.sleep(2)
     driver.find_element(By.ID, passport_no_id).send_keys(applicant.passport_no)
+    time.sleep(2)
     driver.find_element(By.ID, passport_expiration_date).send_keys(applicant.exp_date)
+    time.sleep(2)
     driver.find_element(By.ID, code_id).send_keys(applicant.code)
+    time.sleep(2)
     driver.find_element(By.ID, phone_no).send_keys(applicant.phone)
+    time.sleep(2)
     driver.find_element(By.ID, email_id).send_keys(applicant.email)
+    time.sleep(2)
 
     target_save_xpath = '//button[contains(span, "Сохранить")]'
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
-
-    time.sleep(20)
 
     click_on_the_button_by_xapth(driver, target_save_xpath)
 
