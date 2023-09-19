@@ -1,4 +1,5 @@
 import time
+from bs4 import BeautifulSoup
 from datetime import datetime
 
 from selenium import webdriver
@@ -321,22 +322,23 @@ def fill_about_me_info(driver: webdriver, applicant: frenchApplicants.Applicant)
     driver.find_element(By.ID, gender_id).click()
     waitByMethods.wait_clickable_by_xpath(driver, target_gender_xpath)
     driver.find_element(By.XPATH, target_gender_xpath).click()
-
     time.sleep(2)
+
     driver.find_element(By.ID, citizen_id).click()
     waitByMethods.wait_clickable_by_xpath(driver, target_citizen_xpath)
     element = driver.find_element(By.XPATH, target_citizen_xpath)
     driver.execute_script("arguments[0].click();", element)
+    time.sleep(2)
 
     waitByMethods.wait_clickable_by_id(driver, name_id)
     driver.find_element(By.ID, name_id).send_keys(applicant.first_name)
-ф    time.sleep(2)
+    time.sleep(3)
     driver.find_element(By.ID, surname_id).send_keys(applicant.last_name)
-    time.sleep(2)
+    time.sleep(3)
     driver.find_element(By.ID, date_of_birth_id).send_keys(applicant.birth_date)
-    time.sleep(2)
+    time.sleep(3)
     driver.find_element(By.ID, passport_no_id).send_keys(applicant.passport_no)
-    time.sleep(2)
+    time.sleep(3)
     driver.find_element(By.ID, passport_expiration_date).send_keys(applicant.exp_date)
     time.sleep(2)
     driver.find_element(By.ID, code_id).send_keys(applicant.code)
@@ -344,7 +346,7 @@ def fill_about_me_info(driver: webdriver, applicant: frenchApplicants.Applicant)
     driver.find_element(By.ID, phone_no).send_keys(applicant.phone)
     time.sleep(2)
     driver.find_element(By.ID, email_id).send_keys(applicant.email)
-    time.sleep(2)
+    time.sleep(5)
 
     target_save_xpath = '//button[contains(span, "Сохранить")]'
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
@@ -363,15 +365,42 @@ def info_about_me_confirm(driver: webdriver):
 # todo: here I stopped
 def select_date(driver: webdriver):
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
-    # target_continue_xpath = '//button[contains(span, "Продолжить")]'
-    # click_on_the_button_by_xapth(driver, target_continue_xpath)
-    target_date_xpath = '//td[contains(@class, "date-availiable")]'
-    waitByMethods.wait_clickable_by_xpath(driver, target_date_xpath)
-    # driver.find_element(By.XPATH, target_date_xpath).click()
-    element = driver.find_element(By.XPATH, target_date_xpath)
-    driver.execute_script(
-        "arguments[0].click();", element
+
+    pre_script = """
+    tables = document.getElementsByClassName('fc-scrollgrid-sync-table');
+    tbodies = tables[0].getElementsByTagName('tbody');
+    tds = tables[0].getElementsByTagName('td');
+    return tds;
+    """
+
+    tds = driver.execute_script(
+        pre_script
     )
+    print(tds)
+
+    data_dates = []
+
+    for td in tds:
+        td_html = td.get_attribute('outerHTML')
+        soup = BeautifulSoup(td_html, 'html.parser')
+        date_element = soup.find(class_='date-availiable')
+        data_date = date_element.get('data-date')
+        data_dates.append(data_date)
+
+    print(data_dates)
+
+    main_script = '''
+    calendar = document.getElementsByTagName("full-calendar")[0].__ngContext__[158].calendar;
+    calendar.select("REPLACEME")
+    calendar.trigger("dateClick", {dateStr: "REPLACEME"})
+    '''
+
+    modified_main_script = main_script.replace('"REPLACEME"', f'"{data_dates[0]}"')
+
+    driver.execute_script(
+        modified_main_script
+    )
+
     target_xpath_select_time = '//button[contains(@span, "Все")]'
     waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time)
     target_xpath_select_time_slot = '//input[contains(@id, "STRadio")]'
