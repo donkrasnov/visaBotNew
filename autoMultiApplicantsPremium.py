@@ -73,12 +73,12 @@ def solve_h_captcha(driver: webdriver, url: str, sitekey, applicant: spainApplic
     h_captcha_response_name = 'h-captcha-response'
 
     current_timestamp = datetime.now()
-    print(f'[INFO] {current_timestamp} ---> Solving BLS hCAPTCHA for ---> {applicant.email}')
+    print(f'[INFO hCAPTCHA] {current_timestamp} ---> Solving BLS hCAPTCHA for ---> {applicant.email}')
     key = solver.hcaptcha(sitekey, url)['code']
     end_time_local = datetime.now()
     current_timestamp = datetime.now()
     print(
-        f'[INFO] {current_timestamp} ---> BLS hCAPTCHA was solved by: {end_time_local - start_time_local} for ---> {applicant.email}')
+        f'[INFO hCAPTCHA] {current_timestamp} ---> BLS hCAPTCHA was solved by: {end_time_local - start_time_local} for ---> {applicant.email}')
 
     h_captcha_response_input_field = driver.find_element(By.NAME, h_captcha_response_name)
     driver.execute_script(
@@ -213,7 +213,7 @@ def refresh_page_before_bls_captcha_is_working(driver: webdriver, applicant: spa
             break
 
     current_timestamp = datetime.now()
-    print(f"[INFO] {current_timestamp} ---> BLS hCAPTCHA is working now for ---> {applicant.email}")
+    print(f"[INFO hCAPTCHA] {current_timestamp} ---> BLS hCAPTCHA is working now for ---> {applicant.email}")
 
 
 def refresh_page_before_element_visible_by_class_name(driver: webdriver, class_name: str,
@@ -386,7 +386,7 @@ def main():
         except Exception as e:
             current_time = datetime.now()
             print(f"[ERROR] {current_time} ---> An error occured: {str(e)}")
-            print(f"[INFO] {current_time} ---> Restarting the script in 10 seconds...")
+            print(f"[RESTART] {current_time} ---> Restarting the script in 10 seconds...")
             time.sleep(10)
 
     # multiprocessing_applicants_start(applicants_premium, 'Premium')
