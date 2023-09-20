@@ -223,6 +223,7 @@ def find_available_slots(driver: webdriver):
 
 
 def refresh_page_until_slot_will_be_available_for_selected_city(driver: webdriver, city: str, is_prime_available: bool):
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
     timeout = 60
     start_time = time.time()
     selected_short = 'Short'
@@ -384,10 +385,17 @@ def select_date(driver: webdriver):
         td_html = td.get_attribute('outerHTML')
         soup = BeautifulSoup(td_html, 'html.parser')
         date_element = soup.find(class_='date-availiable')
-        data_date = date_element.get('data-date')
-        data_dates.append(data_date)
+        if date_element:
+            data_date = date_element.get('data-date')
+            data_dates.append(data_date)
+        else:
+            # data_dates.append("Date not found!")
+            continue
 
     print(data_dates)
+
+    filtered_date_dates = [item for item in data_dates if item.startswith("2023")]
+    # filtered_date_dates = [item for item in data_dates if item.startswith("2023") and item != ""]
 
     main_script = '''
     calendar = document.getElementsByTagName("full-calendar")[0].__ngContext__[158].calendar;
@@ -395,16 +403,17 @@ def select_date(driver: webdriver):
     calendar.trigger("dateClick", {dateStr: "REPLACEME"})
     '''
 
-    modified_main_script = main_script.replace('"REPLACEME"', f'"{data_dates[0]}"')
+    modified_main_script = main_script.replace('"REPLACEME"', f'"{filtered_date_dates[0]}"')
 
     driver.execute_script(
         modified_main_script
     )
 
-    target_xpath_select_time = '//button[contains(@span, "Все")]'
-    waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time)
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    target_xpath_select_time = '//div[contains(@span, "Все")]'
+    # waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time)
     target_xpath_select_time_slot = '//input[contains(@id, "STRadio")]'
-    waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time_slot)
+    # waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time_slot)
     driver.find_element(By.XPATH, target_xpath_select_time_slot).click()
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
     click_on_the_button_by_xapth(driver, target_continue_xpath)
@@ -421,7 +430,7 @@ def skip_insurance_details(driver: webdriver):
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
     waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
-    target_confirm_xpath = '//button[contains(span, " Подтвердить ")]'
+    target_confirm_xpath = '//button[contains(span, "Подтвердить")]'
     waitByMethods.wait_clickable_by_xpath(driver, target_confirm_xpath)
 
 

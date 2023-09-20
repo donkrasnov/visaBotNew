@@ -25,8 +25,8 @@ class Applicant:
 test_user = Applicant(
     '7',
     '9252090883',
-    'VANELI@YANDEX.RU',
-    # 'INTCHERNOV@YANDEX.RU',
+    # 'VANELI@YANDEX.RU',
+    'INTCHERNOV@YANDEX.RU',
     'Vaneli',
     '240297-',
     '240297Vis@',
