@@ -174,6 +174,8 @@ def input_otp_and_continue(driver: webdriver, otp_value: str, applicant: spainAp
     otp_element.send_keys(otp_value)
 
     solve_h_captcha(driver, BLS_SPAIN_URL, sitekey_first_captcha, applicant)
+    # Change if hCAPTCHA can't be solved automatically
+    # time.sleep(30)
 
     waitByMethods.wait_visibility_by_name(driver, 'save')
     continue_button = driver.find_element(By.NAME, 'save')
@@ -186,6 +188,8 @@ def input_otp_and_continue(driver: webdriver, otp_value: str, applicant: spainAp
 
 def continue_after_second_form(driver: webdriver, applicant: spainApplicants.Applicant):
     solve_h_captcha(driver, BLS_SPAIN_URL, sitekey_first_captcha, applicant)
+    # Change if hCAPTCHA can't be solved automatically
+    # time.sleep(30)
 
     waitByMethods.wait_visibility_by_name(driver, 'save')
     continue_button = driver.find_element(By.NAME, 'save')
