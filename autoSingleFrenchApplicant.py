@@ -1,4 +1,5 @@
 import time
+import random
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -150,7 +151,7 @@ def login(driver: webdriver, applicant: frenchApplicants.Applicant):
 
     waitByMethods.wait_visibility_by_id(driver, target_email_id)
     input_email = driver.find_element(By.ID, target_email_id)
-    input_email.send_keys(applicant.email)
+    input_email.send_keys(applicant.login_email)
 
     input_password = driver.find_element(By.ID, target_password_id)
     input_password.send_keys(applicant.password_vfs)
@@ -160,7 +161,7 @@ def login(driver: webdriver, applicant: frenchApplicants.Applicant):
     button_booking = driver.find_element(By.XPATH, target_booking_xpath)
     button_booking.click()
     current_time = datetime.now()
-    print(f"[INFO] {current_time} ---> Logged in successfully for ---> {applicant.email}")
+    print(f"[INFO] {current_time} ---> Logged in successfully for ---> {applicant.login_email}")
 
 
 def click_on_the_button_by_xapth(driver: webdriver, xpath: str):
@@ -410,13 +411,30 @@ def select_date(driver: webdriver):
     )
 
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
-    target_xpath_select_time = '//div[contains(@span, "Все")]'
-    # waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time)
-    target_xpath_select_time_slot = '//input[contains(@id, "STRadio")]'
-    # waitByMethods.wait_visibility_by_xpath(driver, target_xpath_select_time_slot)
-    driver.find_element(By.XPATH, target_xpath_select_time_slot).click()
+    # radio_elements = driver.find_element(By.CSS_SELECTOR, "input[type='radio'][name='SlotRadio'].ba-slot-radio.active")
+
+    radio_elements = driver.find_elements(By.NAME, "SlotRadio")
+    random_index = random.randint(0, len(radio_elements) - 1)
+    random_radio_id = radio_elements[random_index].get_attribute("id")
+    driver.execute_script(
+        f"document.getElementById('{random_radio_id}').click()"
+    )
+
+    # Randomly select one element from the list
+    # random_radio_element = random.choice(radio_elements)
+    # if random_radio_element:
+    #     random_radio_element.click()
+    # else:
+    #     current_time = datetime.now()
+    #     print(f"[ERROR] {current_time} ---> No available time slots!")
+
+    # if radio_elements:
+    #     random_index = random.randint(0, len(radio_elements) - 1)
+    #     radio_elements[random_index].click()
+
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
     click_on_the_button_by_xapth(driver, target_continue_xpath)
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
 
 
 def select_services(driver: webdriver):
@@ -430,15 +448,20 @@ def skip_insurance_details(driver: webdriver):
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
     waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
+    driver.find_element(By.XPATH, target_continue_xpath).click()
     target_confirm_xpath = '//button[contains(span, "Подтвердить")]'
     waitByMethods.wait_clickable_by_xpath(driver, target_confirm_xpath)
+    driver.find_element(By.XPATH, target_confirm_xpath).click()
 
 
 def details_and_payment(driver: webdriver):
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
-    driver.find_element(By.ID, 'mat-checkbox-7-input').click()
+    driver.find_element(By.ID, 'mat-checkbox-3-input').click()
     target_payment_online_xpath = '//button[contains(span, " Оплатить онлайн ")]'
-    driver.find_element(By.XPATH, target_payment_online_xpath)
+    driver.find_element(By.XPATH, target_payment_online_xpath).click()
+    target_continue_xpath = '//button[contains(span, "Продолжить")]'
+    waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
+    driver.find_element(By.XPATH, target_continue_xpath).click()
 
 
 def booking(applicant: frenchApplicants.Applicant, city: str, is_prime_exist: bool):
@@ -478,7 +501,7 @@ if __name__ == '__main__':
     # is_prime = True
     is_prime = False
     try:
-        booking(frenchApplicants.test_user, yekat, is_prime)
+        booking(frenchApplicants.test_user_2, yekat, is_prime)
     except NoSuchElementException:
         current_timestamp = datetime.now()
         print(f"[ERROR] {current_timestamp} ---> No such element exception!")
