@@ -67,9 +67,19 @@ def fill_first_form(driver: webdriver, category_booking: str, applicant: spainAp
     verification_code_button.click()
 
 
+CONFIG_CAPTCHA = {
+    'server': '2captcha.com',
+    'apiKey': 'a8c29c48cfc7bd56a2519f4584961fa1',
+    'softId': 123,
+    'defaultTimeout': 360,
+    'recaptchaTimeout': 600,
+    'pollingInterval': 10,
+}
+
+
 def solve_h_captcha(driver: webdriver, url: str, sitekey, applicant: spainApplicants.Applicant):
     start_time_local = datetime.now()
-    solver = TwoCaptcha(API_KEY)
+    solver = TwoCaptcha(**CONFIG_CAPTCHA)
     h_captcha_response_name = 'h-captcha-response'
 
     current_timestamp = datetime.now()
@@ -393,7 +403,7 @@ def main():
     # multiprocessing_applicants_start(applicants_all_types, 'Premium')
 
     # current_time = datetime.now()
-    # print(f"[ERROR] {current_time} ---> An error occured: {str(e)}")
+    # print(f"[ERROR] {current_time} ---> An error occurred: {str(e)}")
     # print(f"[INFO] {current_time} ---> Restarting the script in 10 seconds...")
     # time.sleep(10)
 
