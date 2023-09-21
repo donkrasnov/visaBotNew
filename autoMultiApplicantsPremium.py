@@ -396,8 +396,8 @@ def main():
         except Exception as e:
             current_time = datetime.now()
             print(f"[ERROR] {current_time} ---> An error occured: {str(e)}")
-            print(f"[RESTART] {current_time} ---> Restarting the script in 10 seconds...")
-            time.sleep(10)
+            print(f"[RESTART] {current_time} ---> Restarting the script in 30 seconds...")
+            time.sleep(30)
 
     # multiprocessing_applicants_start(applicants_premium, 'Premium')
     # multiprocessing_applicants_start(applicants_all_types, 'Premium')
