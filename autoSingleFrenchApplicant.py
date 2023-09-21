@@ -379,6 +379,7 @@ def select_date(driver: webdriver):
         pre_script
     )
     print(tds)
+    time.sleep(1)
 
     data_dates = []
 
@@ -419,6 +420,7 @@ def select_date(driver: webdriver):
     driver.execute_script(
         f"document.getElementById('{random_radio_id}').click()"
     )
+    time.sleep(2)
 
     # Randomly select one element from the list
     # random_radio_element = random.choice(radio_elements)
@@ -442,26 +444,31 @@ def select_services(driver: webdriver):
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
     waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
     click_on_the_button_by_xapth(driver, target_continue_xpath)
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    print("ok")
 
 
 def skip_insurance_details(driver: webdriver):
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
+    driver.find_element(By.ID, 'onetrust-close-btn-container').click()
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
     waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
-    driver.find_element(By.XPATH, target_continue_xpath).click()
+    click_on_the_button_by_xapth(driver, target_continue_xpath)
     target_confirm_xpath = '//button[contains(span, "Подтвердить")]'
-    waitByMethods.wait_clickable_by_xpath(driver, target_confirm_xpath)
+    waitByMethods.wait_visibility_by_xpath(driver, target_confirm_xpath)
     driver.find_element(By.XPATH, target_confirm_xpath).click()
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
 
 
 def details_and_payment(driver: webdriver):
     waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
-    driver.find_element(By.ID, 'mat-checkbox-3-input').click()
-    target_payment_online_xpath = '//button[contains(span, " Оплатить онлайн ")]'
+    driver.execute_script("document.getElementById('mat-checkbox-3-input').click()")
+    target_payment_online_xpath = '//button[contains(span, "Оплатить онлайн")]'
     driver.find_element(By.XPATH, target_payment_online_xpath).click()
     target_continue_xpath = '//button[contains(span, "Продолжить")]'
     waitByMethods.wait_clickable_by_xpath(driver, target_continue_xpath)
     driver.find_element(By.XPATH, target_continue_xpath).click()
+    waitByMethods.wait_invisibility_by_class_name(driver, 'sk-ball-spin-clockwise')
 
 
 def booking(applicant: frenchApplicants.Applicant, city: str, is_prime_exist: bool):

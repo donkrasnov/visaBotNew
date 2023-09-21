@@ -37,7 +37,8 @@ test_user = Applicant(
 test_user_2 = Applicant(
     '7',
     '9252101020',
-    'VANELI@YANDEX.RU',
+    # 'VANELI@YANDEX.RU',
+    'INTCHERNOV@YANDEX.RU',
     'VAN321@BK.RU',
     '240297Vis@',
     'IVAN',
@@ -46,5 +47,5 @@ test_user_2 = Applicant(
     '732882881',
     '18072026',
     'FMS34003',
-    'Male',
+    'Male'
 )
